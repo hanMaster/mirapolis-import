@@ -1,0 +1,7 @@
+[env]
+
+RUST_LOG = "debug"
+
+PAYLOAD_PATH = "./payload.csv"
+
+API_URL = "https://jsonplaceholder.typicode.com/posts"
