@@ -1,53 +1,42 @@
-use std::{fs, io};
-use std::io::BufRead;
-
-use serde::Serialize;
-use serde_json::json;
-
-use crate::config::config;
-use crate::error::Result;
-
-mod config;
-mod error;
-
-#[derive(Debug, Serialize)]
-struct Payload {
-    title: String,
-    body: String,
-    #[serde(rename(serialize = "userId"))]
-    user_id: u32,
-}
+use mtool::modules::person::save_list;
+use mtool::{cli, update_person_director, update_person_job, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let file = fs::File::open(&config().PAYLOAD_PATH)?;
-    let mut lines = io::BufReader::new(file).lines();
-
-    let mut payload: Vec<Payload> = vec![];
-
-    // Пропуск заголовков
-    lines.next();
-
-    while let Some(data) = lines.next() {
-        let str = data?;
-        let arr: Vec<&str> = str.split(';').filter(|field| field.len() > 0).collect();
-        let row = Payload {
-            title: String::from(arr[0]),
-            body: String::from(arr[1]),
-            user_id: arr[2].parse::<u32>()?,
-        };
-        payload.push(row);
+    let matches = cli().get_matches();
+    let filename = matches.get_one::<String>("file").unwrap();
+    let source = matches.get_one::<String>("base").unwrap();
+    let is_demo = source.eq("demo");
+    if is_demo {
+        println!("Тестовая база!");
+    } else {
+        println!("Прод база");
     }
-    // println!("{:#?}", payload);
 
-    let client = reqwest::Client::new();
-    let res = client
-        .post(&config().API_URL)
-        .json(&json!(payload[0]))
-        .send()
-        .await?;
-
-    println!("Request status: {:?}", res.status());
+    match matches.subcommand() {
+        Some(("update", sub_matches)) => {
+            let object = sub_matches.get_one::<String>("OBJECT").expect("OBJECT");
+            match object.as_str() {
+                "boss" => {
+                    println!("Обновляем руководителя");
+                    update_person_director(filename, is_demo).await?;
+                    println!("Обновление закончено!");
+                }
+                "job" => {
+                    println!("Обновляем должность");
+                    update_person_job(filename, is_demo).await?;
+                    println!("Обновление закончено!");
+                }
+                &_ => {}
+            }
+        }
+        Some(("get", _)) => {
+            println!("Скачать список сотрудников");
+            save_list(is_demo).await?;
+            println!("Скачивание закончено!");
+        }
+        _ => {}
+    }
 
     Ok(())
 }

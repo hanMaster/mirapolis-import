@@ -4,10 +4,10 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    ConfigMissingEnv(&'static str),
     Io(std::io::Error),
     Parse(ParseIntError),
-    Reqwest(reqwest::Error),
+    Request(reqwest::Error),
+    Fetch(String),
 }
 
 //region      --- Error Boilerplate
@@ -33,7 +33,7 @@ impl From<ParseIntError> for Error {
 
 impl From<reqwest::Error> for Error {
     fn from(value: reqwest::Error) -> Self {
-        Self::Reqwest(value)
+        Self::Request(value)
     }
 }
 //endregion   --- Error Boilerplate
