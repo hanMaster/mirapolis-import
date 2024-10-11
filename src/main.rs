@@ -1,16 +1,28 @@
+use tracing::info;
+use tracing_subscriber::EnvFilter;
+
+use mtool::{cli, Result, update_person_director, update_person_job};
 use mtool::modules::person::save_list;
-use mtool::{cli, update_person_director, update_person_job, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .without_time()
+        .with_target(true)
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     let matches = cli().get_matches();
-    let filename = matches.get_one::<String>("file").unwrap();
-    let source = matches.get_one::<String>("base").unwrap();
+    let filename = matches.get_one::<String>("file").expect("expect filename");
+    let outfile = matches
+        .get_one::<String>("output")
+        .expect("expect filename");
+    let source = matches.get_one::<String>("base").expect("expect source");
     let is_demo = source.eq("demo");
     if is_demo {
-        println!("Тестовая база!");
+        info!("Тестовая база!");
     } else {
-        println!("Прод база");
+        info!("Прод база");
     }
 
     match matches.subcommand() {
@@ -18,24 +30,24 @@ async fn main() -> Result<()> {
             let object = sub_matches.get_one::<String>("OBJECT").expect("OBJECT");
             match object.as_str() {
                 "boss" => {
-                    println!("Обновляем руководителя");
+                    info!("Обновляем руководителя");
                     update_person_director(filename, is_demo).await?;
-                    println!("Обновление закончено!");
+                    info!("Обновление закончено!");
                 }
                 "job" => {
-                    println!("Обновляем должность");
+                    info!("Обновляем должность");
                     update_person_job(filename, is_demo).await?;
-                    println!("Обновление закончено!");
+                    info!("Обновление закончено!");
                 }
-                &_ => {}
+                _ => unreachable!(),
             }
         }
         Some(("get", _)) => {
-            println!("Скачать список сотрудников");
-            save_list(is_demo).await?;
-            println!("Скачивание закончено!");
+            info!("Скачать список сотрудников");
+            save_list(outfile, is_demo).await?;
+            info!("Скачивание закончено!");
         }
-        _ => {}
+        _ => unreachable!(),
     }
 
     Ok(())

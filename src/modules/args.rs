@@ -15,14 +15,17 @@ pub fn cli() -> Command {
         .arg(
             arg!(-f --file <filename>)
                 .num_args(0..=1)
-                .default_value("full.csv")
-                .default_missing_value("full.csv"),
+                .default_value("full.csv"),
         )
         .arg(
             arg!(-b --base <source>)
                 .num_args(0..=1)
                 .value_parser(["demo", "prod"])
-                .default_value("demo")
-                .default_missing_value("demo"),
+                .default_value("demo"),
+        )
+        .arg(
+            arg!(-o --output <outfile>)
+                .num_args(0..=1)
+                .default_value("output.csv"),
         )
 }
