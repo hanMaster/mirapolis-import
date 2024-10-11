@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use tracing::debug;
+use tracing::{debug, error, info};
 
 use crate::modules::error::Result;
 use crate::modules::fetch::Worker;
@@ -69,7 +69,7 @@ fn find_director<'a>(name: &str, mut iter: impl Iterator<Item = &'a Person>) -> 
 
 pub async fn update_person_director(filename: &str, is_demo: bool) -> Result<()> {
     let list = get_list(is_demo).await?;
-    println!("Получено записей: {}", list.len());
+    info!("Получено записей: {}", list.len());
 
     let file_data = read_new_data(filename).await?;
     for file in file_data {
@@ -79,24 +79,24 @@ pub async fn update_person_director(filename: &str, is_demo: bool) -> Result<()>
 
         if let Some(site) = saved {
             if site.director_name.ne(&file.director) {
-                println!(
+                info!(
                     "Изменить для: {}; было: {}; будет: {}",
                     file.full_name, site.director_name, file.director
                 );
                 let dir_option = find_director(&file.director, list.iter());
                 debug!("{:?}", &dir_option);
                 if let Some(director) = dir_option {
-                    println!("Отправлен запрос на изменение данных");
+                    info!("Отправлен запрос на изменение данных");
                     let worker = Worker::new(is_demo);
                     let res = worker
                         .patch_person_director(&site.person_id, &director.person_id)
                         .await;
                     match res {
                         Ok(_) => {
-                            println!("Успешно");
+                            info!("Успешно");
                         }
                         Err(err) => {
-                            println!("{:?}", err);
+                            error!("{:?}", err);
                         }
                     }
                 }
@@ -108,7 +108,7 @@ pub async fn update_person_director(filename: &str, is_demo: bool) -> Result<()>
 
 pub async fn update_person_job(filename: &str, is_demo: bool) -> Result<()> {
     let list = get_list(is_demo).await?;
-    println!("Получено записей: {}", list.len());
+    info!("Получено записей: {}", list.len());
 
     let file_data = read_new_data(filename).await?;
     for file in file_data {
@@ -117,22 +117,22 @@ pub async fn update_person_job(filename: &str, is_demo: bool) -> Result<()> {
         });
         if let Some(site) = saved {
             if site.job_title.ne(&file.job_title) {
-                println!(
+                info!(
                     "Изменить для: {}; было: {}; будет: {}",
                     file.full_name, site.job_title, file.job_title
                 );
 
-                println!("Отправлен запрос на изменение данных");
+                info!("Отправлен запрос на изменение данных");
                 let worker = Worker::new(is_demo);
                 let res = worker
                     .patch_person_job(&site.person_id, &file.job_title)
                     .await;
                 match res {
                     Ok(_) => {
-                        println!("Успешно");
+                        info!("Успешно");
                     }
                     Err(err) => {
-                        println!("{:?}", err);
+                        error!("{:?}", err);
                     }
                 }
             }
@@ -143,7 +143,7 @@ pub async fn update_person_job(filename: &str, is_demo: bool) -> Result<()> {
 
 pub async fn save_list(path: &str, is_demo: bool) -> Result<()> {
     let list = get_list(is_demo).await?;
-    println!("Получено записей: {}", list.len());
+    info!("Получено записей: {}", list.len());
     let mut data_for_save: Vec<String> = Vec::with_capacity(list.len() + 1);
     data_for_save.push("Id;ФИО;Должность;Подразделение;Руководитель".to_string());
 
