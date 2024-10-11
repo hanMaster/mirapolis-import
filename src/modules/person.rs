@@ -141,7 +141,7 @@ pub async fn update_person_job(filename: &str, is_demo: bool) -> Result<()> {
     Ok(())
 }
 
-pub async fn save_list(path: &String, is_demo: bool) -> Result<()> {
+pub async fn save_list(path: &str, is_demo: bool) -> Result<()> {
     let list = get_list(is_demo).await?;
     println!("Получено записей: {}", list.len());
     let mut data_for_save: Vec<String> = Vec::with_capacity(list.len() + 1);
